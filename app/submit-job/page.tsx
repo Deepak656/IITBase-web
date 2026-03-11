@@ -266,7 +266,7 @@ function SubmitJobForm() {
                 required
                 rows={3}
                 className="w-full px-4 py-3 border border-blue-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="e.g., JD explicitly mentions IIT/NIT preference, or requires strong system design skills typically found in tier-1 graduates"
+                placeholder="e.g., JD explicitly mentions IIT preference, or requires strong system design skills typically found in tier-1 graduates"
               />
               <p className="text-xs text-blue-700 mt-2">
                 Explain why this role is specifically suited for graduates from top-tier institutions
