@@ -1,4 +1,4 @@
-import { getToken } from './auth';
+import { getToken, removeToken } from './auth';
 import type { Job, JobListResponse, JobCreateRequest, MyJobsResponse, MyJobsStatsResponse } from '../types/job';
 import type { LoginRequest, SignupRequest, AuthResponse } from '../types/user';
 
@@ -32,7 +32,11 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   // 🔐 Handle auth failures explicitly
   if (response.status === 401 || response.status === 403) {
     // optional: clear token + redirect later
-    localStorage.removeItem('token');
+    removeToken();
+    // Trigger global logout
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
     throw new Error('Session expired. Please login again.');
   }
 
@@ -96,7 +100,12 @@ export const api = {
   },
 
   user: {
-    me: () => fetchApi<{ email: string; role: string; college?: string; graduationYear?: number; activeSessions?: number }>('/user/me'),
+    me: () => fetchApi<{ 
+      email: string; 
+      role: string; 
+      college?: string; 
+      graduationYear?: number; 
+      activeSessions?: number }>('/user/me'),
     
     updateProfile: (data: { college?: string; graduationYear?: number }) =>
       fetchApi<{ email: string; role: string; college?: string; graduationYear?: number }>('/user/profile', {

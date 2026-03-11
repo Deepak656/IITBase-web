@@ -11,7 +11,7 @@ export default function HomePage() {
               Premium Opportunities for Top-Tier Talent
             </h1>
             <p className="text-lg text-gray-600 mb-10 leading-relaxed" style={{ fontFamily: 'Roboto, sans-serif' }}>
-              IITBase connects graduates from IIT, NIT, and premier institutions with high-quality roles at leading companies. Every job is manually curated and verified.
+              IITBase connects graduates from IIT with high-quality roles at leading companies. Every job is manually curated and verified.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -50,13 +50,13 @@ export default function HomePage() {
             </div>
             <div>
               <div className="text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Top 1%
+                Top 0.1%
               </div>
               <div className="text-lg font-semibold text-gray-900 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Elite Institutions
               </div>
               <p className="text-gray-600 leading-relaxed" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                Focused on IIT, NIT, and tier-1 colleges
+                Focused on IIT Graduates
               </p>
             </div>
             <div>
@@ -111,7 +111,7 @@ export default function HomePage() {
                 Direct Applications
               </h3>
               <p className="text-gray-600 leading-relaxed" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                No middlemen. We provide direct links to company career pages, ensuring your application reaches the right people.
+                We provide direct links to company career pages, ensuring your application reaches the right people.
               </p>
             </div>
 

@@ -104,3 +104,9 @@
   );
   background-size: 1000px 100%;
 }
+
+.input {
+@apply w-full px-4 py-3 border border-slate-300 rounded-xl
+        focus:outline-none focus:ring-2 focus:ring-blue-500
+        text-slate-900 bg-white;
+}

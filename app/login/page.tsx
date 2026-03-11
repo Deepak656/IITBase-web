@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../lib/api';
-import { setToken, setRole } from '../../lib/auth';
+import { setToken } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LoginPage() {
-  const { refreshAuth } = useAuth();
+  const { setUser } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +23,12 @@ export default function LoginPage() {
     try {
       const response = await api.auth.login({ email, password });
       setToken(response.token);
-      setRole(response.role);
-      refreshAuth();
+      // Update context
+      setUser({
+        email: email,
+        role: response.role,
+      });
+      
       const next = new URLSearchParams(window.location.search).get('next');
 
       if (response.role === 'ADMIN') {

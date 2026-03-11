@@ -4,11 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { logout as clearLocalAuth } from '../lib/auth';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { authed, admin, refreshAuth } = useAuth();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -20,12 +19,10 @@ export default function Navbar() {
 
     setLoggingOut(true);
     try {
-      await api.auth.logout();
+      await logout();
     } catch (error) {
       console.error('Logout API failed:', error);
     } finally {
-      clearLocalAuth();
-      refreshAuth();
       router.push('/login');
       setLoggingOut(false);
     }
@@ -65,7 +62,7 @@ export default function Navbar() {
 
               <Link
                 href={
-                  authed
+                  isAuthenticated
                     ? '/submit-job'
                     : `/signup?intent=submit-job&next=${encodeURIComponent('/submit-job')}`
                 }
@@ -79,7 +76,7 @@ export default function Navbar() {
                 Submit Job
               </Link>
 
-              {admin && (
+              {isAdmin && (
                 <Link
                   href="/admin/jobs"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -97,7 +94,7 @@ export default function Navbar() {
 
           {/* Auth Actions */}
           <div className="flex items-center gap-3">
-            {authed ? (
+            {isAuthenticated ? (
               <>
                 <Link
                   href="/profile"

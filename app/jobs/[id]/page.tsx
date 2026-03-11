@@ -12,7 +12,7 @@ export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { authed } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function JobDetailPage() {
     setApplying(true);
 
 
-    if (!authed) {
+    if (!isAuthenticated) {
       router.push(
         `/signup?intent=apply&next=${encodeURIComponent(
           `/jobs/${job.id}?apply=1`
@@ -63,13 +63,13 @@ export default function JobDetailPage() {
 
       const shouldApply = searchParams.get('apply');
 
-      if (authed && shouldApply === '1' && job.applyUrl) {
+      if (isAuthenticated && shouldApply === '1' && job.applyUrl) {
         window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
 
         // Clean URL so refresh doesn't re-trigger
         router.replace(`/jobs/${job.id}`);
       }
-    }, [authed, job, searchParams, router]);
+    }, [isAuthenticated, job, searchParams, router]);
   /* ================================
      LOADING STATE
      ================================ */
