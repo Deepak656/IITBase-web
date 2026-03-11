@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '../../lib/api';
-import { getRole } from '../../lib/auth';
+import { useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import ProfileSettings from '../../components/ProfileSettings';
 import MySubmissions from '../../components/MySubmissions';
 
 function ProfileContent() {
   const router = useRouter();
-  const [role, setRole] = useState<string | null>(null);
+  const { user } = useAuth();
+  const role = user?.role ?? null;  
   const [userInfo, setUserInfo] = useState<{ 
     email: string; 
     role: string;
@@ -21,8 +22,6 @@ function ProfileContent() {
   const [activeTab, setActiveTab] = useState<'submitted' | 'profile'>('submitted');
 
   useEffect(() => {
-    const userRole = getRole();
-    setRole(userRole);
     loadUserInfo();
   }, []);
 
