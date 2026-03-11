@@ -2,7 +2,7 @@ import { getToken, removeToken } from './auth';
 import type { Job, JobListResponse, JobCreateRequest, MyJobsResponse, MyJobsStatsResponse } from '../types/job';
 import type { LoginRequest, SignupRequest, AuthResponse } from '../types/user';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https//:api.iitbase.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https//api.iitbase.com/api';
 
 interface ApiResponse<T> {
   success: boolean;

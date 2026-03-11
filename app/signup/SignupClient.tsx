@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { setToken } from '@/lib/auth';
+import { setToken, getToken } from '@/lib/auth';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect } from 'react';
-import { getToken } from '@/lib/auth';
 
 import StepIntentEmail from './components/StepIntentEmail';
 import StepOtpPassword from './components/StepOtpPassword';
@@ -26,20 +24,33 @@ type Role = 'JOB_SEEKER' | 'RECRUITER';
 
 export default function SignupClient() {
   const router = useRouter();
+  const { user, refreshAuth } = useAuth();
+
   const [step, setStep] = useState<SignupStep>('INTENT_EMAIL');
   const [role, setRoleState] = useState<Role>('JOB_SEEKER');
   const [email, setEmail] = useState('');
   const [userId, setUserId] = useState<number | null>(null);
-    useEffect(() => {
-    const token = getToken();
-    const role = getRole();
 
-    if (token && role) {
-        if (role === 'JOB_SEEKER') router.replace('/jobs');
-        else if (role === 'RECRUITER') router.replace('/submit-job');
-        else router.replace('/');
+  /**
+   * If token already exists, refresh user from backend
+   */
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      refreshAuth();
     }
-    }, []);
+  }, []);
+
+  /**
+   * Redirect authenticated users
+   */
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.role === 'JOB_SEEKER') router.replace('/jobs');
+    else if (user.role === 'RECRUITER') router.replace('/submit-job');
+    else router.replace('/');
+  }, [user]);
 
   /* -------- Handlers -------- */
 
@@ -56,9 +67,12 @@ export default function SignupClient() {
     userId: number;
   }) => {
     setToken(data.token);
-    setRole(data.role);
-    refreshAuth();
+
+    // Refresh user from backend
+    await refreshAuth();
+
     setUserId(data.userId);
+    setRoleState(data.role);
     setStep('WELCOME');
   };
 
@@ -89,11 +103,11 @@ export default function SignupClient() {
         )}
 
         {step === 'WELCOME' && (
-        <StepWelcome
+          <StepWelcome
             role={role}
             onContinue={() => setStep('PROFILE')}
             onSkip={() => setStep('SUCCESS')}
-        />
+          />
         )}
 
         {step === 'PROFILE' && role === 'JOB_SEEKER' && userId && (
