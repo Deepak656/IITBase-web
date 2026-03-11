@@ -18,6 +18,7 @@ type AuthContextType = {
   loading: boolean;
   setUser: (user: User) => void;
   logout: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,35 +27,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!isAuthenticated()) {
-        setLoading(false);
-        return;
-      }
+  /**
+   * Refresh authenticated user
+   * Used after login/signup or page refresh
+   */
+  const refreshAuth = async () => {
+    if (!isAuthenticated()) {
+      setUser(null);
+      return;
+    }
 
-      try {
-        const userData = await api.user.me();
-        setUser({
-          email: userData.email,
-          role: userData.role,
-          college: userData.college,
-          graduationYear: userData.graduationYear,
-        });
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setUser(null);
-        removeToken();
-      } finally {
-        setLoading(false);
-      }
+    try {
+      const userData = await api.user.me();
+      setUser({
+        email: userData.email,
+        role: userData.role,
+        college: userData.college,
+        graduationYear: userData.graduationYear,
+      });
+    } catch (error) {
+      console.error('Failed to refresh auth:', error);
+      setUser(null);
+      removeToken();
+    }
+  };
+
+  /**
+   * Initial auth check on app load
+   */
+  useEffect(() => {
+    const initAuth = async () => {
+      await refreshAuth();
+      setLoading(false);
     };
 
-    fetchUser();
+    initAuth();
   }, []);
 
-  // Listen for 401 errors
+  /**
+   * Global 401 / unauthorized handler
+   */
   useEffect(() => {
     const handleUnauthorized = () => {
       setUser(null);
@@ -63,9 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    return () =>
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
+  /**
+   * Logout
+   */
   const logout = async () => {
     try {
       await api.auth.logout();
@@ -79,15 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
+    <AuthContext.Provider
+      value={{
         user,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'ADMIN',
         loading,
         setUser,
         logout,
-
+        refreshAuth,
       }}
     >
       {children}

@@ -26,8 +26,6 @@ type Role = 'JOB_SEEKER' | 'RECRUITER';
 
 export default function SignupClient() {
   const router = useRouter();
-  const { refreshAuth } = useAuth();
-
   const [step, setStep] = useState<SignupStep>('INTENT_EMAIL');
   const [role, setRoleState] = useState<Role>('JOB_SEEKER');
   const [email, setEmail] = useState('');

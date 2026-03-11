@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams  } from 'next/navigation';
 import { api } from '../../lib/api';
-import { setToken, setRole } from '../../lib/auth';
+import { setToken } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
 export default function SignupClient() {
   const router = useRouter();
-  const { refreshAuth } = useAuth();
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
