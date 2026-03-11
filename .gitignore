@@ -43,3 +43,6 @@ Thumbs.db
 # Misc
 ########################
 .vercel
+.env.local
+repomix-output.txt
+repomix-output.xml

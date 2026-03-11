@@ -1,124 +1,157 @@
 # IITBase Frontend
 
-Clean, minimal frontend for a curated job platform targeting Tier-1 college graduates.
+Frontend for [IITBase](https://iitbase.com) — a curated job platform and peer network for IIT graduates.
 
-## Tech Stack
+## Stack
 
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Fetch API for backend communication
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Fetch API** — all requests go through a centralized `lib/api.ts`
 
-## Features
-
-- Public job browsing with filters
-- Job detail pages with apply redirect
-- User authentication (login/signup)
-- Protected job submission form
-- Admin moderation dashboard
-- Job reporting and removal requests
-
-## Setup
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- Running IITBase backend at `http://localhost:8080`
+- IITBase backend running at `http://localhost:8080`
 
-### Installation
+### Install
 
 ```bash
 npm install
 ```
 
-### Environment Variables
+### Environment
 
-Create `.env.local`:
+Create `.env.local` in the project root:
 
-```
+```env
 NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
 
-### Development
+### Run
 
 ```bash
-npm run dev
+npm run dev        # development
+npm run build      # production build
+npm start          # serve production build
 ```
 
-Visit `http://localhost:3000`
+---
 
-### Production Build
-
-```bash
-npm run build
-npm start
-```
-
-## Folder Structure
+## Project Structure
 
 ```
 app/
-├── layout.tsx              # Root layout with navbar/footer
-├── page.tsx                # Homepage
+├── layout.tsx
+├── page.tsx
+├── globals.css
 ├── jobs/
-│   ├── page.tsx            # Job listing with filters
-│   └── [id]/page.tsx       # Job detail page
-├── login/page.tsx          # Login
-├── signup/page.tsx         # Signup
-├── submit-job/page.tsx     # Submit job (protected)
-└── admin/
-    └── jobs/page.tsx       # Admin dashboard (admin only)
+│   ├── page.tsx
+│   └── [id]/page.tsx
+├── submit-job/page.tsx
+├── login/page.tsx
+├── signup/
+│   ├── page.tsx
+│   ├── SignupClient.tsx
+│   └── components/
+│       ├── StepWelcome.tsx
+│       ├── StepIntentEmail.tsx
+│       ├── StepOtpPassword.tsx
+│       ├── StepSuccess.tsx
+│       ├── JobSeekerOnboardingForm.tsx
+│       └── RecruiterOnboardingForm.tsx
+├── profile/page.tsx
+├── reset-password/page.tsx
+├── admin/
+│   └── jobs/page.tsx
+├── about/page.tsx
+├── careers/page.tsx
+├── contact/page.tsx
+├── feedback/page.tsx
+├── privacy/page.tsx
+└── terms/page.tsx
 
 components/
-├── Navbar.tsx              # Navigation with auth state
-├── Footer.tsx              # Site footer
-├── JobCard.tsx             # Job preview card
-├── JobList.tsx             # List of job cards
-├── JobFilters.tsx          # Filter sidebar
-├── ReportJobModal.tsx      # Report job modal
-├── RemovalRequestModal.tsx # Request removal modal
-└── ProtectedRoute.tsx      # Auth guard component
+├── Navbar.tsx
+├── Footer.tsx
+├── JobCard.tsx
+├── JobList.tsx
+├── JobFilters.tsx
+├── MySubmissions.tsx
+├── ProfileSettings.tsx
+├── ProtectedRoute.tsx
+├── ReportJobModal.tsx
+└── RemovalRequestModal.tsx
+
+context/
+└── AuthContext.tsx
 
 lib/
-├── api.ts                  # All API calls
-├── auth.ts                 # JWT token management
-└── constants.ts            # Enums and dropdown values
+├── api.ts
+├── auth.ts
+├── constants.ts
+└── feedback.ts
 
 types/
-├── job.ts                  # Job types
-└── user.ts                 # User types
+├── job.ts
+└── user.ts
+
+public/
+├── logo-icon.svg
+├── logo-lockup.svg
+└── logo-wordmark.svg
 ```
 
-## Design Principles
+---
 
-1. **Clean and minimal** - No unnecessary animations or visual noise
-2. **Mobile-first** - Responsive design for all screen sizes
-3. **Professional tone** - Serious platform for serious opportunities
-4. **User trust** - Community reporting and transparent moderation
+## Authentication
 
-## API Integration
+JWT tokens are stored in `localStorage` and automatically attached to every authenticated request via the `fetchApi` wrapper in `lib/api.ts`.
 
-All API calls are centralized in `lib/api.ts`. The backend base URL is configured via environment variable. JWT tokens are stored in localStorage and automatically included in authenticated requests.
+Flow:
+1. User logs in or completes signup OTP verification
+2. Backend returns a JWT — stored via `setToken()`
+3. `AuthContext` calls `/user/me` on mount to hydrate user state (email, role)
+4. Protected routes check `isAuthenticated` from context
+5. Admin routes additionally check `isAdmin` (role === `'ADMIN'`)
+6. On logout or 401 response, token is cleared and user is redirected to `/login`
 
-## Authentication Flow
+Role is always sourced from the `/user/me` API response — never decoded from the token client-side.
 
-1. User logs in or signs up
-2. JWT token and role stored in localStorage
-3. Protected routes check authentication status
-4. Admin routes verify ADMIN role
-5. Logout clears localStorage and redirects to login
+---
 
-## Key Components
+## API Layer
 
-- **ProtectedRoute**: Wraps pages requiring authentication, redirects to login if not authenticated
-- **JobFilters**: Controls all filtering logic for job search
-- **ReportJobModal**: Community-driven quality control
-- **RemovalRequestModal**: Allows recruiters to request job removal
+All backend communication goes through `lib/api.ts`. It handles:
 
-## Interview Talking Points
+- Auth header injection
+- 401/403 detection → fires `auth:unauthorized` custom event → global logout
+- Consistent error messaging from backend response body
 
-- Why App Router over Pages Router? (Better server components, improved routing)
-- How is authentication handled? (JWT in localStorage, client-side validation)
-- Why centralize API calls? (Single source of truth, easier testing, consistent error handling)
-- How would you add analytics? (Google Analytics, Mixpanel via custom hooks)
-- How would you improve performance? (Image optimization, code splitting, caching)
+Base URL is configured via `NEXT_PUBLIC_API_URL`.
+
+---
+
+## Features
+
+- Browse and filter live job listings (public, no auth required)
+- Job detail pages with direct apply link
+- Multi-step OTP-based signup with job seeker / recruiter onboarding
+- Password reset via OTP
+- Authenticated job submission (pending admin approval)
+- Submission history and status tracking via profile
+- Community job reporting
+- Recruiter-initiated removal requests
+- Admin dashboard for approving, rejecting, and expiring listings
+- Static pages — about, careers, contact, feedback, privacy, terms
+
+---
+
+## Design Notes
+
+- No animations, no gradients, no fluff — optimized for fast scanning
+- Mobile-first layout, tested down to 375px
+- Inter font, neutral grays, minimal color usage
+- Every state (loading, error, empty) is explicitly handled
