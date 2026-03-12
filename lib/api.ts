@@ -29,14 +29,17 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
     headers,
   });
 
-  // 🔐 Handle auth failures explicitly
-  if (response.status === 401 || response.status === 403) {
-    // optional: clear token + redirect later
+  // Only logout for protected endpoints
+  if (
+    (response.status === 401 || response.status === 403) &&
+    !endpoint.startsWith('/auth/')
+  ) {
     removeToken();
-    // Trigger global logout
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
+
     throw new Error('Session expired. Please login again.');
   }
 
