@@ -2,17 +2,17 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { isAuthenticated, removeToken } from '../lib/auth';
-import { api } from '../lib/api';
+import { authApi } from '../lib/authApi';
+import { userApi } from '../lib/userApi';
 
 type User = {
   email: string;
   role: string;
-  college?: string;
-  graduationYear?: number;
 } | null;
 
 type AuthContextType = {
   user: User;
+  role: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
@@ -38,12 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const userData = await api.user.me();
+      const userData = await userApi.user.me();
       setUser({
         email: userData.email,
         role: userData.role,
-        college: userData.college,
-        graduationYear: userData.graduationYear,
       });
     } catch (error) {
       console.error('Failed to refresh auth:', error);
@@ -84,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const logout = async () => {
     try {
-      await api.auth.logout();
+      await authApi.auth.logout();
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
@@ -98,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        role: user?.role ?? null, 
         isAuthenticated: !!user,
         isAdmin: user?.role === 'ADMIN',
         loading,

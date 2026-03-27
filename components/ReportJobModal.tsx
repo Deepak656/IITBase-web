@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '../lib/api';
+import { communityJobsApi } from '../lib/communityJobsApi';
 import { REPORT_REASONS } from '../lib/constants';
 
 interface Props {
@@ -20,7 +20,7 @@ export default function ReportJobModal({ jobId, onClose }: Props) {
     setLoading(true);
 
     try {
-      await api.jobs.report(jobId, reason, comment);
+      await communityJobsApi.jobs.report(jobId, reason, comment);
       setSuccess(true);
       setTimeout(() => {
         onClose();

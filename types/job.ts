@@ -3,16 +3,26 @@ export interface Job {
   title: string;
   company: string;
   location: string;
+
   jobDescription?: string;
+
   applyUrl: string;
   sourceUrl?: string;
+
+  roleTitle: string;
+  jobDomain: string;
+  techRole?: string;
+
   minExperience: number;
   maxExperience: number;
-  primaryRole: string;
+
   techStack: string[];
   skills?: string[];
+
   tierOneReason: string;
+
   createdAt: string;
+
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNDER_REVIEW' | 'EXPIRED';
 }
 
@@ -42,10 +52,17 @@ export interface JobCreateRequest {
   applyUrl: string;
   sourceUrl?: string;
   jobDescription?: string;
+
   minExperience: number;
   maxExperience: number;
-  primaryRole: string;
+
+  jobDomain: 'TECHNOLOGY' | 'PRODUCT' | 'ANALYTICS' | 'CONSULTING';
+
+  techRole?: string; // required if TECHNOLOGY
+  roleTitle: string;
+
   techStack: string[];
   skills: string[];
+
   tierOneReason: string;
 }

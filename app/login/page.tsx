@@ -3,15 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api } from '../../lib/api';
+import { authApi } from '../../lib/authApi';
 import { setToken } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LoginPage() {
   const { setUser } = useAuth();
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,25 +23,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.auth.login({ email, password });
+      const response = await authApi.auth.login({ email, password });
       setToken(response.token);
-      // Update context
-      setUser({
-        email: email,
-        role: response.role,
-      });
-      
-      const next = new URLSearchParams(window.location.search).get('next');
+      setUser({ email, role: response.role });
 
-      if (response.role === 'ADMIN') {
-        router.push(next || '/admin/jobs');
-      } else if (response.role === 'JOB_SEEKER') {
-        router.push(next || '/jobs');
-      } else if (response.role === 'RECRUITER') {
-        router.push(next || '/profile');
-      } else {
-        router.push(next || '/profile');
-      }
+      const next = new URLSearchParams(window.location.search).get('next');
+      if (response.role === 'ADMIN')      router.push(next || '/admin/jobs');
+      else if (response.role === 'JOB_SEEKER') router.push(next || '/jobs');
+      else if (response.role === 'RECRUITER')  router.push(next || '/recruiter');
+      else router.push(next || '/profile');
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {
@@ -48,136 +40,136 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-10">
-          <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-400 rounded-lg flex items-center justify-center">
-              <span className="text-gray-900 font-bold text-2xl">I</span>
-            </div>
-          </div>
-          <h1 className="text-3xl font-semibold text-gray-900 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Sign in to IITBase
-          </h1>
-          <p className="text-gray-600 text-base">
-            Access your professional account
+    <div className="auth-page">
+      <div className="auth-bg-grid" />
+      <div className="auth-glow-top-right" />
+      <div className="auth-glow-bottom-left" />
+
+      {/* ── Left panel ─────────────────────────────────────── */}
+      <div className="auth-left">
+        <a href="/" className="auth-logo">
+          <div className="auth-logo-mark">I</div>
+          <span className="auth-logo-text">IITBase</span>
+        </a>
+
+        <div>
+          <div className="auth-left-eyebrow">Welcome back</div>
+          <h2 className="auth-left-heading">
+            Your next role<br />is waiting.
+          </h2>
+          <p className="auth-left-sub">
+            Sign in to access your profile, track applications, and connect with top companies hiring IIT talent.
           </p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-8">
-          {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <svg 
-                  className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  />
-                </svg>
-                <p className="text-red-800 text-sm leading-relaxed">{error}</p>
+        <div className="auth-trust-list">
+          {[
+            { icon: '🎓', title: 'IIT-verified network',    sub: 'Only top-tier talent and serious recruiters' },
+            { icon: '🔒', title: 'Secure session',          sub: 'JWT-based auth with Redis session management' },
+            { icon: '⚡', title: 'Direct to decision makers', sub: 'No middlemen, no ghost applications' },
+          ].map(p => (
+            <div key={p.title} className="auth-trust-pill">
+              <div className="auth-trust-pill-icon">{p.icon}</div>
+              <div className="auth-trust-pill-body">
+                <strong>{p.title}</strong>
+                <span>{p.sub}</span>
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label 
-                htmlFor="email" 
-                className="block text-sm font-medium text-gray-900 mb-2"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                         text-gray-900 transition-all"
-                placeholder="you@example.com"
-              />
-            </div>
+      {/* ── Right panel ────────────────────────────────────── */}
+      <div className="auth-right">
+        <div style={{ width: '100%', maxWidth: 440 }}>
+          <div className="auth-card auth-card-enter">
 
-            <div>
-              <label 
-                htmlFor="password" 
-                className="block text-sm font-medium text-gray-900 mb-2"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                         text-gray-900 transition-all"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {/* Forgot Password Link */}
-            <div className="flex items-center justify-end">
-              <Link 
-                href="/reset-password" 
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-blue-600 text-white font-medium rounded-lg 
-                       hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                       focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed 
-                       transition-colors"
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <p className="text-gray-600 text-sm">
-              New to IITBase?{' '}
-              <Link 
-                href="/signup" 
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-              >
-                Create an account
+            {/* No step dots on login — single step */}
+            <div className="auth-eyebrow">Sign in</div>
+            <h1 className="auth-heading">Welcome back</h1>
+            <p className="auth-subtext">
+              Don't have an account?{' '}
+              <Link href="/signup" className="auth-link">
+                Create one free →
               </Link>
             </p>
-          </div>
-        </div>
 
-        <p className="mt-8 text-center text-xs text-gray-500 leading-relaxed">
-          By signing in, you agree to our{' '}
-          <a href="/terms" className="underline hover:text-gray-700 transition-colors">
-            Terms of Service
-          </a>
-          {' '}and{' '}
-          <a href="/privacy" className="underline hover:text-gray-700 transition-colors">
-            Privacy Policy
-          </a>
-        </p>
+            {error && (
+              <div className="auth-error">
+                <svg width="15" height="15" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" />
+                </svg>
+                <p className="auth-error-text">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <label className="auth-label">Email address</label>
+              <input
+                className="auth-input"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                autoFocus
+              />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <label className="auth-label" style={{ marginBottom: 0 }}>Password</label>
+                <Link href="/reset-password" className="auth-link" style={{ fontSize: 12 }}>
+                  Forgot password?
+                </Link>
+              </div>
+
+              <div className="auth-input-wrap">
+                <input
+                  className="auth-input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="auth-input-icon-btn"
+                  onClick={() => setShowPassword(p => !p)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                className="auth-btn auth-btn-primary"
+                disabled={loading}
+                style={{ marginTop: 8 }}
+              >
+                {loading ? 'Signing in…' : 'Sign in →'}
+              </button>
+            </form>
+          </div>
+
+          <p className="auth-footer-note">
+            By signing in you agree to our{' '}
+            <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>
+          </p>
+        </div>
       </div>
     </div>
   );

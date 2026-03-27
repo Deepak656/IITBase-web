@@ -50,7 +50,7 @@ app/
 ├── jobs/
 │   ├── page.tsx
 │   └── [id]/page.tsx
-├── submit-job/page.tsx
+├── share-opportunity/page.tsx
 ├── login/page.tsx
 ├── signup/
 │   ├── page.tsx

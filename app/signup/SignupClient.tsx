@@ -2,131 +2,150 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { setToken, getToken } from '@/lib/auth';
+import { authApi } from '../../lib/authApi';
+import { setToken } from '@/lib/auth';
 import { useAuth } from '@/context/AuthContext';
 
 import StepIntentEmail from './components/StepIntentEmail';
 import StepOtpPassword from './components/StepOtpPassword';
-import StepWelcome from './components/StepWelcome';
-import JobSeekerOnboardingForm from './components/JobSeekerOnboardingForm';
-import RecruiterOnboardingForm from './components/RecruiterOnboardingForm';
 import StepSuccess from './components/StepSuccess';
 
-type SignupStep =
-  | 'INTENT_EMAIL'
-  | 'OTP_PASSWORD'
-  | 'WELCOME'
-  | 'PROFILE'
-  | 'SUCCESS';
-
+type SignupStep = 'INTENT_EMAIL' | 'OTP_PASSWORD' | 'SUCCESS';
 type Role = 'JOB_SEEKER' | 'RECRUITER';
+
+const STEP_INDEX: Record<SignupStep, number> = {
+  INTENT_EMAIL: 0,
+  OTP_PASSWORD: 1,
+  SUCCESS: 2,
+};
 
 export default function SignupClient() {
   const router = useRouter();
-  const { user, refreshAuth } = useAuth();
+  const { user, loading, refreshAuth } = useAuth();
 
   const [step, setStep] = useState<SignupStep>('INTENT_EMAIL');
-  const [role, setRoleState] = useState<Role>('JOB_SEEKER');
+  const [role, setRole] = useState<Role>('JOB_SEEKER');
   const [email, setEmail] = useState('');
-  const [userId, setUserId] = useState<number | null>(null);
 
-  /**
-   * If token already exists, refresh user from backend
-   */
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      refreshAuth();
-    }
-  }, []);
-
-  /**
-   * Redirect authenticated users
-   */
-  useEffect(() => {
-    if (!user) return;
-
-    if (user.role === 'JOB_SEEKER') router.replace('/jobs');
-    else if (user.role === 'RECRUITER') router.replace('/submit-job');
+    if (loading || step !== 'INTENT_EMAIL' || !user) return;
+    if (user.role === 'JOB_SEEKER') router.replace('/profile');
+    else if (user.role === 'RECRUITER') router.replace('/recruiter/dashboard');
     else router.replace('/');
-  }, [user]);
+  }, [user, loading, step]);
 
-  /* -------- Handlers -------- */
-
-  const handleEmailSubmitted = async (email: string, role: Role) => {
-    await api.auth.requestSignupOtp(email);
-    setEmail(email);
-    setRoleState(role);
+  const handleEmailSubmitted = async (submittedEmail: string, selectedRole: Role) => {
+    await authApi.auth.requestSignupOtp(submittedEmail);
+    setEmail(submittedEmail);
+    setRole(selectedRole);
     setStep('OTP_PASSWORD');
   };
 
-  const handleOtpVerified = async (data: {
-    token: string;
-    role: Role;
-    userId: number;
-  }) => {
+  const handleOtpVerified = async (data: { token: string; role: Role; userId: number }) => {
     setToken(data.token);
-
-    // Refresh user from backend
     await refreshAuth();
-
-    setUserId(data.userId);
-    setRoleState(data.role);
-    setStep('WELCOME');
-  };
-
-  const handleProfileCompleted = async () => {
+    setRole(data.role);
     setStep('SUCCESS');
   };
 
   const handleFinish = () => {
-    if (role === 'JOB_SEEKER') router.push('/jobs');
-    else router.push('/submit-job');
+    router.push(role === 'RECRUITER' ? '/recruiter/onboarding' : '/profile');
   };
 
-  /* -------- Render -------- */
+  const currentDotIndex = STEP_INDEX[step];
+
+  const leftPanelContent = {
+    INTENT_EMAIL: {
+      eyebrow: 'Trusted by IITians',
+      heading: 'The network built\nfor India\'s best.',
+      sub: 'IITBase connects top-tier engineering talent with companies that value pedigree, depth, and ambition.',
+    },
+    OTP_PASSWORD: {
+      eyebrow: 'Almost there',
+      heading: 'Verify your email\nand set a password.',
+      sub: 'Your account is seconds away. Enter the code we sent and choose a strong password.',
+    },
+    SUCCESS: {
+      eyebrow: 'You\'re in',
+      heading: 'Account created\nsuccessfully.',
+      sub: 'You now have access to IITBase. Start building your profile or explore open roles.',
+    },
+  }[step];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {step === 'INTENT_EMAIL' && (
-          <StepIntentEmail onSubmit={handleEmailSubmitted} />
-        )}
+    <div className="auth-page">
+      <div className="auth-bg-grid" />
+      <div className="auth-glow-top-right" />
+      <div className="auth-glow-bottom-left" />
 
-        {step === 'OTP_PASSWORD' && (
-          <StepOtpPassword
-            email={email}
-            role={role}
-            onVerified={handleOtpVerified}
-          />
-        )}
+      {/* ── Left panel ─────────────────────────────────────── */}
+      <div className="auth-left">
+        <a href="/" className="auth-logo">
+          <div className="auth-logo-mark">I</div>
+          <span className="auth-logo-text">IITBase</span>
+        </a>
 
-        {step === 'WELCOME' && (
-          <StepWelcome
-            role={role}
-            onContinue={() => setStep('PROFILE')}
-            onSkip={() => setStep('SUCCESS')}
-          />
-        )}
+        <div>
+          <div className="auth-left-eyebrow">{leftPanelContent.eyebrow}</div>
+          <h2 className="auth-left-heading" style={{ whiteSpace: 'pre-line' }}>
+            {leftPanelContent.heading}
+          </h2>
+          <p className="auth-left-sub">{leftPanelContent.sub}</p>
+        </div>
 
-        {step === 'PROFILE' && role === 'JOB_SEEKER' && userId && (
-          <JobSeekerOnboardingForm
-            userId={userId}
-            onComplete={handleProfileCompleted}
-          />
-        )}
+        <div className="auth-trust-list">
+          {[
+            { icon: '🎓', title: 'IIT-verified network', sub: 'Only IIT graduates and serious recruiters' },
+            { icon: '🔒', title: 'Private by default', sub: 'Your profile is only shown to relevant recruiters' },
+            { icon: '⚡', title: 'Direct to decision makers', sub: 'No middlemen, no ghost applications' },
+          ].map(p => (
+            <div key={p.title} className="auth-trust-pill">
+              <div className="auth-trust-pill-icon">{p.icon}</div>
+              <div className="auth-trust-pill-body">
+                <strong>{p.title}</strong>
+                <span>{p.sub}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {step === 'PROFILE' && role === 'RECRUITER' && userId && (
-          <RecruiterOnboardingForm
-            userId={userId}
-            onComplete={handleProfileCompleted}
-          />
-        )}
+      {/* ── Right panel ────────────────────────────────────── */}
+      <div className="auth-right">
+        <div style={{ width: '100%', maxWidth: 440 }}>
+          <div className="auth-card auth-card-enter" key={step}>
 
-        {step === 'SUCCESS' && (
-          <StepSuccess role={role} onFinish={handleFinish} />
-        )}
+            {/* Step dots */}
+            <div className="auth-step-dots">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className={`auth-dot${i === currentDotIndex ? ' active' : i < currentDotIndex ? ' done' : ''}`}
+                />
+              ))}
+            </div>
+
+            {step === 'INTENT_EMAIL' && (
+              <StepIntentEmail onSubmit={handleEmailSubmitted} />
+            )}
+            {step === 'OTP_PASSWORD' && (
+              <StepOtpPassword
+                email={email}
+                role={role}
+                onVerified={handleOtpVerified}
+                onBack={() => setStep('INTENT_EMAIL')}
+              />
+            )}
+            {step === 'SUCCESS' && (
+              <StepSuccess role={role} onFinish={handleFinish} />
+            )}
+          </div>
+
+          <p className="auth-footer-note">
+            By signing up you agree to our{' '}
+            <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>
+          </p>
+        </div>
       </div>
     </div>
   );

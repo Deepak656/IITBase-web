@@ -1,4 +1,3 @@
-// app/api/feedback/route.ts
 //lib/path.ts ( new path)
 import { NextRequest, NextResponse } from 'next/server';
 

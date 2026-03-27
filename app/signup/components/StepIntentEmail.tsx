@@ -1,4 +1,3 @@
-// StepIntentEmail.tsx
 'use client';
 
 import { useState } from 'react';
@@ -12,49 +11,83 @@ export default function StepIntentEmail({
 }) {
   const [role, setRole] = useState<Role>('JOB_SEEKER');
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email || loading) return;
+    setLoading(true);
+    try {
+      await onSubmit(email, role);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-xl border">
-      <h1 className="text-3xl font-bold text-center mb-2">Join IITBase</h1>
-      <p className="text-slate-600 text-center mb-8">
-        Curated hiring for top-tier talent
+    <>
+      <div className="auth-eyebrow">Step 1 of 2</div>
+      <h1 className="auth-heading">Join IITBase</h1>
+      <p className="auth-subtext">
+        India's professional network for IIT graduates and the companies that want to hire them.
       </p>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      {/* Role selector */}
+      <div className="auth-role-grid">
         {[
-          { id: 'JOB_SEEKER', title: 'Job Seeker', sub: 'Find top roles' },
-          { id: 'RECRUITER', title: 'Recruiter', sub: 'Hire IIT talent' },
+          {
+            id: 'JOB_SEEKER' as Role,
+            icon: '🎓',
+            title: 'Job Seeker',
+            sub: 'IIT grad looking for opportunities',
+          },
+          {
+            id: 'RECRUITER' as Role,
+            icon: '🏢',
+            title: 'Recruiter',
+            sub: 'Hire from India\'s top talent pool',
+          },
         ].map((item) => (
           <button
             key={item.id}
-            onClick={() => setRole(item.id as Role)}
-            className={`p-4 rounded-xl border text-left transition ${
-              role === item.id
-                ? 'border-blue-600 bg-blue-50'
-                : 'border-slate-200 hover:border-slate-300'
-            }`}
+            onClick={() => setRole(item.id)}
+            className={`auth-role-card${role === item.id ? ' selected' : ''}`}
           >
-            <p className="font-semibold">{item.title}</p>
-            <p className="text-sm text-slate-600">{item.sub}</p>
+            <span className="auth-role-card-icon">{item.icon}</span>
+            <span className="auth-role-card-title">{item.title}</span>
+            <span className="auth-role-card-sub">{item.sub}</span>
           </button>
         ))}
       </div>
 
+      {/* Email */}
+      <label className="auth-label">Email address</label>
       <input
+        className="auth-input"
         type="email"
         placeholder="you@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full px-4 py-3 border rounded-xl mb-4"
+        onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+        autoFocus
       />
 
       <button
-        onClick={() => onSubmit(email, role)}
-        disabled={!email}
-        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl disabled:opacity-50"
+        className="auth-btn auth-btn-primary"
+        onClick={handleSubmit}
+        disabled={!email || loading}
       >
-        Continue with Email
+        {loading ? 'Sending code…' : 'Continue with email →'}
       </button>
-    </div>
+
+      <div className="auth-divider">
+        <div className="auth-divider-line" />
+        <span className="auth-divider-text">already have an account?</span>
+        <div className="auth-divider-line" />
+      </div>
+
+      <a href="/login" className="auth-btn auth-btn-ghost" style={{ textAlign: 'center' }}>
+        Sign in instead
+      </a>
+    </>
   );
 }

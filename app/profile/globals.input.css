@@ -1,0 +1,24 @@
+/* Add these to your existing globals.css */
+
+/* Base input class used across all profile form components */
+.input {
+  @apply w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white text-gray-900
+    placeholder-gray-400
+    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
+    disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed
+    transition-colors;
+  font-family: 'Roboto', sans-serif;
+}
+
+textarea.input {
+  @apply resize-none;
+}
+
+select.input {
+  @apply cursor-pointer;
+}
+
+/* Font imports — add to <head> or layout if not already present */
+/* 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap');
+*/

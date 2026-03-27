@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { isAuthenticated, isAdmin, logout, loading } = useAuth();
+  const { isAuthenticated, isAdmin, logout, loading, role } = useAuth();
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -14,10 +14,9 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     if (loggingOut) return;
-
     setLoggingOut(true);
     try {
-      await logout(); // redirect handled in AuthContext
+      await logout();
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
@@ -25,128 +24,99 @@ export default function Navbar() {
     }
   };
 
-  return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex justify-between items-center h-16">
+  const getProfileRoute = () => {
+    if (isAdmin) return '/admin/jobs';
+    if (role === 'RECRUITER') return '/recruiter/dashboard';
+    return '/profile';
+  };
 
-          {/* Logo */}
-          <div className="flex items-center gap-10">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-gradient-to-br from-teal-500 to-cyan-400 rounded-lg flex items-center justify-center">
-                <span className="text-gray-900 font-bold text-lg">I</span>
-              </div>
-              <span className="text-xl font-semibold text-gray-900">
-                IITBase
-              </span>
+  return (
+    <nav className="app-nav">
+      <div className="app-nav-inner">
+
+        {/* Left — logo + links */}
+        <div className="app-nav-left">
+          <Link href="/" className="app-nav-logo">
+            <div className="app-nav-logo-mark">I</div>
+            <span className="app-nav-logo-text">IITBase</span>
+          </Link>
+
+          <div className="app-nav-links">
+            <Link
+              href="/jobs"
+              className={`app-nav-link${isActive('/jobs') ? ' active' : ''}`}
+            >
+              Browse Jobs
             </Link>
 
-            {/* Navigation */}
-            <div className="hidden md:flex items-center gap-1">
-
-              <Link
-                href="/jobs"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive('/jobs')
-                    ? 'bg-slate-50 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                Browse Jobs
-              </Link>
-
+            {(isAdmin || role === 'JOB_SEEKER') && (
               <Link
                 href={
                   isAuthenticated
-                    ? '/submit-job'
-                    : `/signup?intent=submit-job&next=${encodeURIComponent(
-                        '/submit-job'
-                      )}`
+                    ? '/share-opportunity'
+                    : `/signup?intent=share-opportunity&next=${encodeURIComponent('/share-opportunity')}`
                 }
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive('/submit-job')
-                    ? 'bg-slate-50 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`app-nav-link${isActive('/share-opportunity') ? ' active' : ''}`}
               >
-                Submit Job
+                Share Opportunity
               </Link>
-
-              {isAdmin && (
-                <Link
-                  href="/admin/jobs"
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/admin')
-                      ? 'bg-slate-50 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  Admin
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Auth Actions */}
-          <div className="flex items-center gap-3">
-
-            {/* Prevent hydration flicker */}
-            {loading ? (
-              <div className="w-24 h-8 bg-gray-100 rounded animate-pulse"></div>
-            ) : isAuthenticated ? (
-              <>
-                <Link
-                  href="/profile"
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg ${
-                    isActive('/profile')
-                      ? 'bg-slate-50 text-gray-900'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  Profile
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loggingOut ? 'Signing out...' : 'Sign Out'}
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                >
-                  Sign In
-                </Link>
-
-                <Link
-                  href="/signup"
-                  className="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                >
-                  Get Started
-                </Link>
-              </>
             )}
 
+            {isAdmin && (
+              <Link
+                href="/admin/jobs"
+                className={`app-nav-link${isActive('/admin') ? ' active' : ''}`}
+              >
+                Admin
+              </Link>
+            )}
           </div>
         </div>
+
+        {/* Right — auth actions */}
+        <div className="app-nav-right">
+          {loading ? (
+            <div
+              className="app-skeleton"
+              style={{ width: 80, height: 32, borderRadius: 8 }}
+            />
+          ) : isAuthenticated ? (
+            <>
+              <Link
+                href={getProfileRoute()}
+                className={`app-btn app-btn-ghost app-btn-sm${
+                  isActive('/profile') || isActive('/recruiter') || isActive('/admin')
+                    ? ' active'
+                    : ''
+                }`}
+              >
+                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Profile
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="app-btn app-btn-ghost app-btn-sm"
+              >
+                {loggingOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="app-btn app-btn-ghost app-btn-sm">
+                Sign in
+              </Link>
+              <Link href="/signup" className="app-btn app-btn-primary app-btn-sm">
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
+
       </div>
     </nav>
   );

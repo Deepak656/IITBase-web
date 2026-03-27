@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '../lib/api';
+import { communityJobsApi } from '../lib/communityJobsApi';
 
 interface Props {
   jobId: number;
@@ -19,7 +19,7 @@ export default function RemovalRequestModal({ jobId, onClose }: Props) {
     setLoading(true);
 
     try {
-      await api.jobs.requestRemoval(jobId, email, reason);
+      await communityJobsApi.jobs.requestRemoval(jobId, email, reason);
       setSuccess(true);
       setTimeout(() => {
         onClose();

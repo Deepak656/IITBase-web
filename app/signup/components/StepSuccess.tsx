@@ -1,5 +1,6 @@
-// app/signup/components/StepSuccess.tsx
 'use client';
+
+import { useEffect, useState } from 'react';
 
 type Role = 'JOB_SEEKER' | 'RECRUITER';
 
@@ -10,27 +11,42 @@ export default function StepSuccess({
   role: Role;
   onFinish: () => void;
 }) {
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    if (countdown === 0) { onFinish(); return; }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown, onFinish]);
+
+  const destination = role === 'JOB_SEEKER' ? 'your profile' : 'company setup';
+  const progress = ((3 - countdown) / 3) * 100;
+
   return (
-    <div className="bg-white p-10 rounded-2xl shadow-xl border text-center">
-      <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-        <span className="text-3xl">✅</span>
+    <div style={{ textAlign: 'center' }}>
+      <div className="auth-success-icon">
+        <svg width="28" height="28" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
       </div>
 
-      <h1 className="text-3xl font-bold text-slate-900 mb-3">
-        You’re all set
-      </h1>
-
-      <p className="text-slate-600 mb-8">
-        {role === 'JOB_SEEKER'
-          ? 'Your profile is ready. Start exploring curated roles.'
-          : 'Your account is ready. Start hiring top IIT talent.'}
+      <h2 className="auth-heading" style={{ textAlign: 'center' }}>
+        Welcome to IITBase
+      </h2>
+      <p className="auth-subtext" style={{ textAlign: 'center' }}>
+        Your account is ready. Taking you to {destination} in{' '}
+        <strong style={{ color: '#94a3b8' }}>{countdown}s</strong>…
       </p>
 
+      <div className="auth-progress-track">
+        <div className="auth-progress-fill" style={{ width: `${progress}%` }} />
+      </div>
+
       <button
+        className="auth-btn auth-btn-primary"
         onClick={onFinish}
-        className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
       >
-        {role === 'JOB_SEEKER' ? 'Browse jobs' : 'Post a job'}
+        {role === 'JOB_SEEKER' ? 'Set up my profile →' : 'Set up my company →'}
       </button>
     </div>
   );

@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '../lib/api';
+import { userApi } from '../lib/userApi';
+import { authApi } from '../lib/authApi';
 
 interface ProfileSettingsProps {
   userInfo: {
     email: string;
     role: string;
-    college?: string;
-    graduationYear?: number;
     activeSessions?: number;
   } | null;
   onUpdate: () => void;
@@ -16,8 +15,6 @@ interface ProfileSettingsProps {
 
 export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsProps) {
   const [editing, setEditing] = useState(false);
-  const [college, setCollege] = useState(userInfo?.college || '');
-  const [graduationYear, setGraduationYear] = useState(userInfo?.graduationYear?.toString() || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,27 +30,6 @@ export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsP
   // Delete Account State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteEmail, setDeleteEmail] = useState('');
-
-  const handleUpdateProfile = async () => {
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      await api.user.updateProfile({
-        college: college || undefined,
-        graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
-      });
-
-      setSuccess('Profile updated successfully');
-      setEditing(false);
-      onUpdate();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleChangePassword = async () => {
     setError('');
@@ -71,7 +47,7 @@ export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsP
 
     setLoading(true);
     try {
-      await api.user.changePassword(passwordData);
+      await userApi.user.changePassword(passwordData);
       setSuccess('Password changed successfully. Please log in again.');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowPasswordChange(false);
@@ -95,7 +71,7 @@ export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsP
 
     setLoading(true);
     try {
-      await api.user.deleteAccount(deleteEmail);
+      await userApi.user.deleteAccount(deleteEmail);
       alert('Account deleted successfully');
       window.location.href = '/';
     } catch (err: any) {
@@ -109,7 +85,7 @@ export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsP
     if (!confirm('This will log you out from all devices. Continue?')) return;
 
     try {
-      await api.auth.logoutAll();
+      await authApi.auth.logoutAll();
       alert('Logged out from all devices');
       window.location.href = '/login';
     } catch (err: any) {
@@ -171,82 +147,6 @@ export default function ProfileSettings({ userInfo, onUpdate }: ProfileSettingsP
           </button>
         </div>
       </div>
-
-      {/* Editable Fields */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            College/University
-          </label>
-          {editing ? (
-            <input
-              type="text"
-              value={college}
-              onChange={(e) => setCollege(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
-              placeholder="e.g., IIT Bombay"
-            />
-          ) : (
-            <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-gray-900">{userInfo?.college || 'Not set'}</p>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Graduation Year
-          </label>
-          {editing ? (
-            <input
-              type="number"
-              value={graduationYear}
-              onChange={(e) => setGraduationYear(e.target.value)}
-              min="1950"
-              max="2030"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
-              placeholder="e.g., 2024"
-            />
-          ) : (
-            <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-gray-900">{userInfo?.graduationYear || 'Not set'}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Edit/Save Buttons */}
-      <div className="flex gap-3">
-        {editing ? (
-          <>
-            <button
-              onClick={handleUpdateProfile}
-              disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-teal-400 to-cyan-300 text-gray-900 font-medium rounded-lg hover:from-teal-500 hover:to-cyan-400 transition-all shadow-sm disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button
-              onClick={() => {
-                setEditing(false);
-                setCollege(userInfo?.college || '');
-                setGraduationYear(userInfo?.graduationYear?.toString() || '');
-              }}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setEditing(true)}
-            className="px-6 py-2.5 bg-gradient-to-r from-teal-400 to-cyan-300 text-gray-900 font-medium rounded-lg hover:from-teal-500 hover:to-cyan-400 transition-all shadow-sm"
-          >
-            Edit Profile
-          </button>
-        )}
-      </div>
-
       {/* Change Password Section */}
       <div className="pt-6 border-t border-gray-200">
         <h3 className="text-sm font-semibold text-gray-900 mb-3">

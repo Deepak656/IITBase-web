@@ -12,8 +12,6 @@ export interface SignupRequest {
   email: string;
   password: string;
   role: 'JOB_SEEKER' | 'RECRUITER';
-  college?: string;
-  graduationYear?: number;
 }
 
 export interface AuthResponse {

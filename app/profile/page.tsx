@@ -1,160 +1,168 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '../../lib/api';
-import { useAuth } from '../../context/AuthContext';
-import ProtectedRoute from '../../components/ProtectedRoute';
-import ProfileSettings from '../../components/ProfileSettings';
-import MySubmissions from '../../components/MySubmissions';
+import { useCallback, useRef } from 'react';
+import { useProfile } from './hooks/useProfile';
+import ProfileHeader from './components/ProfileHeader';
+import ProfileCompletion from './components/ProfileCompletion';
+import BasicInfoForm from './components/BasicInfoForm';
+import ExperienceSection from './components/sections/ExperienceSection';
+import EducationSection from './components/sections/EducationSection';
+import SkillsSection from './components/sections/SkillsSection';
+import ProjectsSection from './components/sections/ProjectsSection';
+import CertificationsSection from './components/sections/CertificationsSection';
+import JobPreferencesSection from './components/sections/JobPreferencesSection';
+import SectionSkeleton from './hooks/shared/SectionSkeleton';
 
-function ProfileContent() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const role = user?.role ?? null;  
-  const [userInfo, setUserInfo] = useState<{ 
-    email: string; 
-    role: string;
-    college?: string; 
-    graduationYear?: number;
-    activeSessions?: number;
-  } | null>(null);
-  const [activeTab, setActiveTab] = useState<'submitted' | 'profile'>('submitted');
+export default function ProfilePage() {
+  const {
+    profile,
+    loading,
+    error,
+    refetch,
+    updateBasicInfo,
+    uploadResume,
+    uploadPhoto,
+    uploading,
+    saving,
+    saved,
+  } = useProfile();
 
-  useEffect(() => {
-    loadUserInfo();
+  // Scroll targets for nudge actions
+  const basicInfoRef = useRef<HTMLDivElement>(null);
+  const experienceRef = useRef<HTMLDivElement>(null);
+  const educationRef = useRef<HTMLDivElement>(null);
+  const skillsRef = useRef<HTMLDivElement>(null);
+  const resumeRef = useRef<HTMLDivElement>(null);
+  const photoRef = useRef<HTMLDivElement>(null);
+
+  const handleNudgeAction = useCallback((action: string) => {
+    const map: Record<string, React.RefObject<HTMLDivElement>> = {
+      basic: basicInfoRef,
+      experience: experienceRef,
+      education: educationRef,
+      skills: skillsRef,
+      resume: resumeRef,
+      photo: photoRef,
+    };
+    map[action]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  const loadUserInfo = async () => {
-    try {
-      const data = await api.user.me();
-      setUserInfo(data);
-    } catch (error) {
-      console.error('Failed to load user info:', error);
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-sm text-red-500 mb-3">{error}</p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm sticky top-20">
-              {/* User Avatar */}
-              <div className="mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-cyan-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-3xl" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {userInfo?.email ? userInfo.email.charAt(0).toUpperCase() : (role === 'RECRUITER' ? 'R' : role === 'ADMIN' ? 'A' : 'J')}
-                  </span>
-                </div>
-                <h3 className="text-center font-semibold text-gray-900 mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  {role === 'RECRUITER' ? 'Recruiter' : role === 'ADMIN' ? 'Administrator' : 'Job Seeker'}
-                </h3>
-                <p className="text-center text-sm text-gray-600 mb-1" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                  {userInfo?.email || 'Loading...'}
-                </p>
-                {userInfo?.college && (
-                  <p className="text-center text-xs text-gray-500" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                    {userInfo.college}
-                    {userInfo.graduationYear && ` '${userInfo.graduationYear.toString().slice(-2)}`}
-                  </p>
-                )}
-                <p className="text-center text-xs text-gray-500 mt-2" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                  Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </p>
-              </div>
-
-              {/* Navigation */}
-              <nav className="space-y-1 mb-6">
-                <button
-                  onClick={() => setActiveTab('submitted')}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'submitted'
-                      ? 'bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 border border-teal-200'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  style={{ fontFamily: 'Roboto, sans-serif' }}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    My Submissions
-                  </div>
-                </button>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'profile'
-                      ? 'bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 border border-teal-200'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  style={{ fontFamily: 'Roboto, sans-serif' }}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Profile Settings
-                  </div>
-                </button>
-              </nav>
-
-              {/* Submit Job Button */}
-              <div className="pt-6 border-t border-gray-200">
-                <button
-                  onClick={() => router.push('/submit-job')}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-teal-400 to-cyan-300 text-gray-900 font-medium rounded-lg hover:from-teal-500 hover:to-cyan-400 transition-all text-sm shadow-sm"
-                  style={{ fontFamily: 'Roboto, sans-serif' }}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Submit New Job
-                  </div>
-                </button>
+        {/* Profile header */}
+        {loading || !profile ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+            <div className="flex items-start gap-5">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex-shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="h-5 bg-gray-100 rounded w-1/3" />
+                <div className="h-4 bg-gray-100 rounded w-1/2" />
               </div>
             </div>
           </div>
+        ) : (
+          <div ref={photoRef}>
+            <ProfileHeader
+              profile={profile}
+              saving={saving}
+              saved={saved}
+              onPhotoUpload={uploadPhoto}
+              onEditBasicInfo={() =>
+                basicInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }
+            />
+          </div>
+        )}
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {activeTab === 'submitted' ? (
-              <MySubmissions />
-            ) : (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Profile Settings
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-1" style={{ fontFamily: 'Roboto, sans-serif' }}>
-                    Manage your account information and security
-                  </p>
-                </div>
+        {/* Completion nudge */}
+        {profile && (
+          <ProfileCompletion profile={profile} onNudgeAction={handleNudgeAction} />
+        )}
 
-                <div className="p-6">
-                  <ProfileSettings 
-                    userInfo={userInfo} 
-                    onUpdate={loadUserInfo}
-                  />
-                </div>
-              </div>
-            )}
+        {/* Basic info form */}
+        <div ref={basicInfoRef}>
+          {loading || !profile ? (
+            <SectionSkeleton rows={2} />
+          ) : (
+            <BasicInfoForm profile={profile} onSave={updateBasicInfo} />
+          )}
+        </div>
+
+        {/* Two-column layout */}
+        <div className="grid grid-cols-3 gap-6 items-start">
+
+          {/* Left col — main sections */}
+          <div className="col-span-2 space-y-4">
+            <div ref={experienceRef}>
+              <ExperienceSection
+                experiences={profile?.workExperiences ?? []}
+                loading={loading}
+                onRefetch={refetch}
+              />
+            </div>
+
+            <div ref={educationRef}>
+              <EducationSection
+                educations={profile?.educations ?? []}
+                loading={loading}
+                onRefetch={refetch}
+              />
+            </div>
+
+            <div ref={skillsRef}>
+              <SkillsSection
+                skills={profile?.skills ?? []}
+                loading={loading}
+                onRefresh={refetch}
+              />
+            </div>
+
+            <ProjectsSection
+              projects={profile?.projects ?? []}
+              loading={loading}
+              onRefetch={refetch}
+            />
+
+            <CertificationsSection
+              certifications={profile?.certifications ?? []}
+              loading={loading}
+              onRefetch={refetch}
+            />
+          </div>
+
+          {/* Right col — preferences + resume (sticky) */}
+          <div className="col-span-1 sticky top-6" ref={resumeRef}>
+            <JobPreferencesSection
+              preference={profile?.jobPreference ?? null}
+              loading={loading}
+              resumeUrl={profile?.resumeUrl}
+              resumeFileName={profile?.resumeFileName}
+              resumeUploading={uploading.resume}
+              onResumeUpload={uploadResume}
+              onPreferenceSaved={refetch}
+            />
           </div>
         </div>
+
       </div>
     </div>
-  );
-}
-
-export default function ProfilePage() {
-  return (
-    <ProtectedRoute>
-      <ProfileContent />
-    </ProtectedRoute>
   );
 }
