@@ -6,73 +6,75 @@ interface Props {
 }
 
 export default function JobCard({ job }: Props) {
+  // roleTitle is always set; fall back to jobDomain if somehow missing
+  const roleDisplay = job.roleTitle ?? job.jobDomain?.replace(/_/g, ' ') ?? '';
+
   return (
     <Link href={`/jobs/${job.id}`} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 p-6 hover:border-teal-300 hover:shadow-md transition-all cursor-pointer">
+      <div className="app-job-card">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1 hover:text-teal-600 transition-colors" style={{ fontFamily: 'Inter, sans-serif' }}>
-              {job.title}
-            </h3>
-            <p className="text-base font-medium text-gray-700 mb-2" style={{ fontFamily: 'Roboto, sans-serif' }}>
-              {job.company}
-            </p>
-            <div className="flex items-center gap-3 text-sm text-gray-600" style={{ fontFamily: 'Roboto, sans-serif' }}>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <div className="flex-1 min-w-0">
+            <h3 className="app-job-card-title">{job.title}</h3>
+            <p className="app-job-card-company">{job.company}</p>
+            <div className="app-job-card-meta">
+              <span className="app-job-card-meta-item">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 {job.location}
               </span>
-              <span className="text-gray-400">•</span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <span className="app-job-card-meta-item">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                {job.minExperience}-{job.maxExperience} years
+                {job.minExperience}–{job.maxExperience} yrs
               </span>
             </div>
           </div>
-          <div className="ml-4">
-            <span className="inline-block px-3 py-1 bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 text-xs font-medium rounded-full border border-teal-200">
-              {job.primaryRole.replace(/_/g, ' ')}
-            </span>
+
+          <div className="ml-4 flex-shrink-0">
+            <span className="app-tag app-tag-accent">{roleDisplay}</span>
           </div>
         </div>
 
         {job.techStack && job.techStack.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {job.techStack.slice(0, 6).map((tech, i) => (
-              <span 
-                key={i} 
-                className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded border border-gray-200"
-                style={{ fontFamily: 'Roboto, sans-serif' }}
-              >
-                {tech}
-              </span>
+              <span key={i} className="app-tag">{tech}</span>
             ))}
             {job.techStack.length > 6 && (
-              <span className="px-2.5 py-1 text-gray-500 text-xs font-medium" style={{ fontFamily: 'Roboto, sans-serif' }}>
+              <span style={{ fontSize: 12, color: 'var(--app-text-faint)', padding: '3px 6px' }}>
                 +{job.techStack.length - 6} more
               </span>
             )}
           </div>
         )}
 
-        <div className="pt-4 border-t border-gray-100">
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="app-job-card-footer">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1 }}>
+            <svg
+              width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"
+              viewBox="0 0 24 24"
+              style={{ color: 'var(--app-accent)', marginTop: 2, flexShrink: 0 }}
+            >
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-gray-600 line-clamp-2" style={{ fontFamily: 'Roboto, sans-serif' }}>
+            <p style={{
+              fontSize: 13, color: 'var(--app-text-muted)',
+              fontWeight: 300, lineHeight: 1.5,
+              display: '-webkit-box', WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              margin: 0,
+            }}>
               {job.tierOneReason}
             </p>
           </div>
-        </div>
-
-        <div className="mt-4 text-xs text-gray-500" style={{ fontFamily: 'Roboto, sans-serif' }}>
-          Posted {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          <span className="app-job-card-date">
+            {new Date(job.createdAt).toLocaleDateString('en-IN', {
+              month: 'short', day: 'numeric', year: 'numeric',
+            })}
+          </span>
         </div>
       </div>
     </Link>
